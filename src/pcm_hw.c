@@ -1,5 +1,7 @@
 /* pcm_hw.c
+**
 ** Copyright (c) 2019, The Linux Foundation.
+** Copyright 2021, The Android Open Source Project
 **
 ** Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -50,7 +52,7 @@ struct pcm_hw_data {
     /** Device number for the pcm device */
     unsigned int device;
     /** File descriptor to the pcm device file node */
-    unsigned int fd;
+    int fd;
     /** Pointer to the pcm node from snd card definiton */
     struct snd_node *node;
 };
@@ -59,7 +61,7 @@ static void pcm_hw_close(void *data)
 {
     struct pcm_hw_data *hw_data = data;
 
-    if (hw_data->fd > 0)
+    if (hw_data->fd >= 0)
         close(hw_data->fd);
 
     free(hw_data);
