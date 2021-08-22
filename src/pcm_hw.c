@@ -1,5 +1,7 @@
 /* pcm_hw.c
+**
 ** Copyright (c) 2019, The Linux Foundation.
+** Copyright 2021, The Android Open Source Project
 **
 ** Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -50,7 +52,7 @@ struct pcm_hw_data {
     /** Device number for the pcm device */
     unsigned int device;
     /** File descriptor to the pcm device file node */
-    unsigned int fd;
+    int fd;
     /** Pointer to the pcm node from snd card definiton */
     struct snd_node *node;
 };
@@ -59,7 +61,7 @@ static void pcm_hw_close(void *data)
 {
     struct pcm_hw_data *hw_data = data;
 
-    if (hw_data->fd > 0)
+    if (hw_data->fd >= 0)
         close(hw_data->fd);
 
     free(hw_data);
@@ -111,14 +113,23 @@ static int pcm_hw_open(unsigned int card, unsigned int device,
 
     snprintf(fn, sizeof(fn), "/dev/snd/pcmC%uD%u%c", card, device,
              flags & PCM_IN ? 'c' : 'p');
-    if (flags & PCM_NONBLOCK)
-        fd = open(fn, O_RDWR|O_NONBLOCK);
-    else
-        fd = open(fn, O_RDWR);
+    // Open the device with non-blocking flag to avoid to be blocked in kernel when all of the
+    //   substreams of this PCM device are opened by others.
+    fd = open(fn, O_RDWR | O_NONBLOCK);
 
     if (fd < 0) {
         free(hw_data);
         return fd;
+    }
+
+    if ((flags & PCM_NONBLOCK) == 0) {
+        // Set the file descriptor to blocking mode.
+        if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK) < 0) {
+            fprintf(stderr, "failed to set to blocking mode on %s", fn);
+            close(fd);
+            free(hw_data);
+            return -ENODEV;
+        }
     }
 
     hw_data->card = card;
