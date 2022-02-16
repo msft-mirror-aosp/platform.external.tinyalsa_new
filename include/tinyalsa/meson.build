@@ -1,11 +1,9 @@
 tinyalsa_headers = [
   'asoundlib.h',
-  'attributes.h',
   'interval.h',
   'limits.h',
   'mixer.h',
   'pcm.h',
-  'plugin.h',
   'version.h'
 ]
 
