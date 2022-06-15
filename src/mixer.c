@@ -732,13 +732,9 @@ struct mixer_ctl *mixer_get_ctl_by_name_and_index(struct mixer *mixer,
         ctl = grp->ctl;
 
         for (n = 0; n < grp->count; n++)
-            if (!strcmp(name, (char*) ctl[n].info.id.name)) {
-                if (index == 0) {
+            if (!strcmp(name, (char*) ctl[n].info.id.name))
+                if (index-- == 0)
                     return ctl + n;
-                } else {
-                    index--;
-                }
-            }
     }
 
 #ifdef TINYALSA_USES_PLUGINS
@@ -747,13 +743,9 @@ struct mixer_ctl *mixer_get_ctl_by_name_and_index(struct mixer *mixer,
         ctl = grp->ctl;
 
         for (n = 0; n < grp->count; n++)
-            if (!strcmp(name, (char*) ctl[n].info.id.name)) {
-                if (index == 0) {
+            if (!strcmp(name, (char*) ctl[n].info.id.name))
+                if (index-- == 0)
                     return ctl + n;
-                } else {
-                    index--;
-                }
-            }
     }
 #endif
     return NULL;
@@ -1047,9 +1039,6 @@ int mixer_ctl_get_array(const struct mixer_ctl *ctl, void *array, size_t count)
         }
 
     case SNDRV_CTL_ELEM_TYPE_IEC958:
-        ret = grp->ops->ioctl(grp->data, SNDRV_CTL_IOCTL_ELEM_READ, &ev);
-        if (ret < 0)
-            return ret;
         size = sizeof(ev.value.iec958);
         source = &ev.value.iec958;
         break;

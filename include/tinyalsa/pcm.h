@@ -217,16 +217,16 @@ struct pcm_config {
      * silence_size      : 0
      */
     /** The minimum number of frames required to start the PCM */
-    unsigned long start_threshold;
+    unsigned int start_threshold;
     /** The minimum number of frames required to stop the PCM */
-    unsigned long stop_threshold;
+    unsigned int stop_threshold;
     /** The minimum number of frames to silence the PCM */
-    unsigned long silence_threshold;
+    unsigned int silence_threshold;
     /** The number of frames to overwrite the playback buffer when the playback underrun is greater
      * than the silence threshold */
-    unsigned long silence_size;
+    unsigned int silence_size;
 
-    unsigned long avail_min;
+    unsigned int avail_min;
 };
 
 /** Enumeration of a PCM's hardware parameters.
