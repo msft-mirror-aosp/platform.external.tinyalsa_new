@@ -41,7 +41,10 @@ cc_library {
         "src/pcm_plugin.c",
         "src/snd_card_plugin.c",
     ],
-    cflags: ["-Werror", "-Wno-macro-redefined"],
+    cflags: [
+        "-Werror",
+        "-Wno-macro-redefined",
+    ],
     export_include_dirs: ["include"],
     local_include_dirs: ["include"],
 
@@ -50,7 +53,10 @@ cc_library {
             enabled: false,
         },
         bionic: {
-            system_shared_libs: ["libc", "libdl"],
+            system_shared_libs: [
+                "libc",
+                "libdl",
+            ],
         },
         android: {
             // TODO(b/263841853): check linking error for host
@@ -64,6 +70,8 @@ cc_library {
             },
         },
     },
+
+    min_sdk_version: "29",
 }
 
 cc_library_headers {
@@ -96,7 +104,10 @@ cc_binary {
     name: "tinymix2",
     srcs: ["utils/tinymix.c"],
     static_libs: ["libtinyalsav2"],
-    cflags: ["-Werror", "-Wall"],
+    cflags: [
+        "-Werror",
+        "-Wall",
+    ],
 }
 
 cc_binary {
