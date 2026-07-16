@@ -103,6 +103,11 @@ TEST_F(PcmOutTest, SetConfig) {
     ASSERT_EQ(pcm_set_config(pcm_object, nullptr), 0);
 }
 
+TEST_F(PcmOutTest, SetSwConfig) {
+    ASSERT_EQ(pcm_set_sw_config(nullptr, nullptr), -EFAULT);
+    ASSERT_EQ(pcm_set_sw_config(pcm_object, &kDefaultConfig), 0);
+}
+
 TEST_F(PcmOutTest, GetBufferSize) {
     unsigned int buffer_size = pcm_get_buffer_size(pcm_object);
     ASSERT_EQ(buffer_size, kDefaultConfig.period_count * kDefaultConfig.period_size);
