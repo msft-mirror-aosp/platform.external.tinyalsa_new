@@ -497,39 +497,71 @@ int pcm_set_config(struct pcm *pcm, const struct pcm_config *config)
         }
     }
 
+    if (pcm_set_sw_config(pcm, config) < 0) {
+        int errno_copy = errno;
+        oops(pcm, errno, "cannot set sw params");
+        return -errno_copy;
+    }
+
+    return 0;
+}
+
+/** Sets the PCM software configuration.
+ * @param pcm A PCM handle.
+ * @param config The configuration to use for software parameters of the PCM.
+ * @returns Zero on success, a negative errno value on failure.
+ * @ingroup libtinyalsa-pcm
+ */
+int pcm_set_sw_config(struct pcm *pcm, const struct pcm_config *config)
+{
+    if (!pcm || !pcm_is_ready(pcm) || !config)
+        return -EFAULT;
+
     struct snd_pcm_sw_params sparams;
     memset(&sparams, 0, sizeof(sparams));
     sparams.tstamp_mode = SNDRV_PCM_TSTAMP_ENABLE;
     sparams.period_step = 1;
-    if (!pcm->config.avail_min) {
-        pcm->config.avail_min = pcm->config.period_size;
+
+    if (!config->avail_min) {
+        if (!pcm->config.avail_min) {
+            pcm->config.avail_min = pcm->config.period_size;
+        }
+        sparams.avail_min = pcm->config.avail_min;
+    } else {
+        pcm->config.avail_min = sparams.avail_min = config->avail_min;
+        if (pcm->mmap_control)
+            pcm->mmap_control->avail_min = pcm->config.avail_min;
     }
-    sparams.avail_min = pcm->config.avail_min;
 
     if (!config->start_threshold) {
         if (pcm->flags & PCM_IN)
             pcm->config.start_threshold = sparams.start_threshold = 1;
         else
             pcm->config.start_threshold = sparams.start_threshold =
-                config->period_count * config->period_size / 2;
-    } else
-        sparams.start_threshold = config->start_threshold;
+                pcm->config.period_count * pcm->config.period_size / 2;
+    } else {
+        pcm->config.start_threshold = sparams.start_threshold =
+            config->start_threshold;
+    }
 
     /* pick a high stop threshold - todo: does this need further tuning */
     if (!config->stop_threshold) {
         if (pcm->flags & PCM_IN)
             pcm->config.stop_threshold = sparams.stop_threshold =
-                config->period_count * config->period_size * 10;
+                pcm->config.period_count * pcm->config.period_size * 10;
         else
             pcm->config.stop_threshold = sparams.stop_threshold =
-                config->period_count * config->period_size;
+                pcm->config.period_count * pcm->config.period_size;
+    } else {
+        pcm->config.stop_threshold = sparams.stop_threshold =
+            config->stop_threshold;
     }
-    else
-        sparams.stop_threshold = config->stop_threshold;
 
-    sparams.xfer_align = config->period_size / 2; /* needed for old kernels */
+    sparams.xfer_align = pcm->config.period_size / 2; /* needed for old kernels */
     sparams.silence_size = config->silence_size;
+    pcm->config.silence_size = config->silence_size;
     sparams.silence_threshold = config->silence_threshold;
+    pcm->config.silence_threshold = config->silence_threshold;
 
     if (pcm->ops->ioctl(pcm->data, SNDRV_PCM_IOCTL_SW_PARAMS, &sparams)) {
         int errno_copy = errno;

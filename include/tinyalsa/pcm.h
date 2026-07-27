@@ -319,6 +319,8 @@ const char *pcm_get_error(const struct pcm *pcm);
 
 int pcm_set_config(struct pcm *pcm, const struct pcm_config *config);
 
+int pcm_set_sw_config(struct pcm *pcm, const struct pcm_config *config);
+
 unsigned int pcm_format_to_bits(enum pcm_format format);
 
 unsigned int pcm_get_buffer_size(const struct pcm *pcm);
